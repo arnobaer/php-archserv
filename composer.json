@@ -1,0 +1,20 @@
+{
+    "name": "arnobaer/php-archserv",
+    "type": "library",
+    "description": "Simple and forgiving ArchServ parser",
+    "keywords": [],
+    "homepage": "https://github.com/arnobaer/php-archserv/",
+    "license": "GPL3",
+    "authors": [
+        {
+            "name": "Bernhard Arnold",
+            "email": "bernhard.arnold@burgried.at"
+        }
+    ],
+    "require": {
+        "php": ">=5.6"
+    },
+    "autoload": {
+        "psr-4": {"ArchServ\\": "src/"}
+    }
+}
