@@ -2,7 +2,7 @@
 
 /*
  * Simple and forgiving ArchServ parser for PHP
- * Copyright (C) 2016  Bernhard Arnold
+ * Copyright (C) 2016-2018  Bernhard Arnold
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,27 @@
  */
 
 // Represents a group of nodes (lines, points...)
-class Group
-{
-  public function __construct($context, $object, $id, $nodes = array())
-  {
-    $this->context = $context;
-    $this->object = $object;
-    $this->id = $id;
-    $this->nodes = $nodes;
-  }
+class Group {
+
+	public $context;
+	public $object;
+	public $id;
+	public $nodes;
+
+	public function __construct($context, $object, $id, $nodes=array()) {
+		$this->context = $context;
+		$this->object = $object;
+		$this->id = $id;
+		$this->nodes = $nodes;
+	}
+
+	// Returns string representation
+	public function __toString() {
+		$lines = array();
+		foreach ($this->nodes as $node) {
+			$lines[] = "$node";
+		}
+		return join(PHP_EOL, $lines);
+	}
+
 } // class Group
