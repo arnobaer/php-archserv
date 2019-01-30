@@ -1,6 +1,6 @@
 # php-archserv
 
-Simple and forgiving ArchServ parser for PHP
+Simple ArchServ parser for PHP
 
 ## Examples
 
@@ -12,14 +12,14 @@ $parser = new \ArchServ\Parser();
 $groups = parser->parse($text);
 
 // Iterate over groups and nodes
-foreach ($parser->parse($text) as $group) {
+foreach ($groups as $group) {
   foreach ($group->nodes as $node) {
     echo sprintf("%s %s\n", $node->sortkey(), $node->code);
   }
 }
 
 // Dump groups in native archserv format
-foreach ($parser->parse($text) as $group) {
+foreach ($groups as $group) {
   echo $group;
 }
 ```
