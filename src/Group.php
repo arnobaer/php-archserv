@@ -20,18 +20,41 @@
  */
 
 // Represents a group of nodes (lines, points...)
-class Group {
+class Group implements Iterator {
 
 	public $context;
 	public $object;
 	public $id;
 	public $nodes;
+	
+	private $position;
 
 	public function __construct($context, $object, $id, $nodes=array()) {
 		$this->context = $context;
 		$this->object = $object;
 		$this->id = $id;
 		$this->nodes = $nodes;
+		$this->position = 0;
+	}
+
+	public function rewind() {
+		$this->position = 0;
+	}
+
+	public function current() {
+		return $this->nodes[$this->position];
+	}
+
+	public function key() {
+		return $this->position;
+	}
+
+	public function next() {
+		++$this->position;
+	}
+
+	public function valid() {
+		return isset($this->nodes[$this->position]);
 	}
 
 	// Returns string representation
