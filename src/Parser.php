@@ -1,7 +1,7 @@
 <?php namespace ArchServ;
 
 /*
- * Simple and forgiving ArchServ parser for PHP
+ * Simple ArchServ parser for PHP
  * Copyright (C) 2016-2018  Bernhard Arnold
  *
  * This program is free software: you can redistribute it and/or modify
