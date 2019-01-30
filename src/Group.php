@@ -20,13 +20,13 @@
  */
 
 // Represents a group of nodes (lines, points...)
-class Group implements Iterator {
+class Group implements \Iterator {
 
 	public $context;
 	public $object;
 	public $id;
 	public $nodes;
-	
+
 	private $position;
 
 	public function __construct($context, $object, $id, $nodes=array()) {
@@ -35,6 +35,10 @@ class Group implements Iterator {
 		$this->id = $id;
 		$this->nodes = $nodes;
 		$this->position = 0;
+	}
+
+	public function append($node) {
+		$this->nodes[] = $node;
 	}
 
 	public function rewind() {
@@ -60,7 +64,7 @@ class Group implements Iterator {
 	// Returns string representation
 	public function __toString() {
 		$lines = array();
-		foreach ($this->nodes as $node) {
+		foreach ($this as $node) {
 			$lines[] = "$node";
 		}
 		return join(PHP_EOL, $lines);

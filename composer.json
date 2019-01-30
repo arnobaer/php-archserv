@@ -1,7 +1,7 @@
 {
     "name": "arnobaer/php-archserv",
     "type": "library",
-    "description": "Simple and forgiving ArchServ parser",
+    "description": "Simple ArchServ parser for PHP",
     "keywords": [],
     "homepage": "https://github.com/arnobaer/php-archserv/",
     "license": "GPL3",

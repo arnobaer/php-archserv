@@ -76,25 +76,27 @@ class Parser {
 	}
 
 	protected function group_nodes($nodes) {
-		$group = NULL;
+		$group = null;
 		$results = array();
 		foreach ($nodes as &$node) {
-			if (NULL === $group) {
+			if (null === $group) {
+				// create first group
 				$group = new Group($node->context, $node->object, $node->id);
-				$group->nodes[] = $node;
 			} else {
+				// test for new group
 				if ($node->context != $group->context ||
 						$node->object != $group->object ||
 						$node->id != $group->id) {
+					// push current group to results, start a new group
 					$results[] = $group;
 					$group = new Group($node->context, $node->object, $node->id);
 				}
-				$group->nodes[] = $node;
 			}
+			$group->append($node);
 		}
-		if (NULL !== $group) {
+		if (null !== $group) {
 			$results[] = $group;
-			$group = NULL;
+			$group = null;
 		}
 		return $results;
 	}
