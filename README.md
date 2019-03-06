@@ -39,7 +39,7 @@ Append the repository and requirement to your project ```composer.json```
         }
     ],
     "require": {
-        "arnobaer/php-archserv": "~1.2"
+        "arnobaer/php-archserv": "~1.3"
     }
 }
 ```
