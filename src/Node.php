@@ -2,7 +2,7 @@
 
 /*
  * Simple ArchServ parser for PHP
- * Copyright (C) 2016-2018  Bernhard Arnold
+ * Copyright (C) 2016-2019  Bernhard Arnold
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
  *
  */
 
-// Represents a single node/line of ArchServ format
+// Represents a single ArchServ node
 class Node {
 
-	// Valid IDs
-	const MeasurePoint = 0;
+	// Valid types
+	const Nail = 0;
 	const Height = 1;
 	const SinglePoint = 11;
 	const LineOpen = 2;
@@ -38,33 +38,33 @@ class Node {
 	const BorderClosed = 93;
 
 	public $context;
-	public $object;
-	public $id;
+	public $group;
+	public $type;
 	public $index;
 	public $x;
 	public $y;
 	public $z;
 	public $code;
 
-	public function __construct($context, $object, $id, $index, $x, $y, $z, $code) {
-		$this->context = (int) $context;
-		$this->object = $object;
-		$this->id = (int) $id;
-		$this->index = (int) $index;
-		$this->x = (float) $x;
-		$this->y = (float) $y;
-		$this->z = (float) $z;
+	public function __construct($context, $group, $type, $index, $x, $y, $z, $code) {
+		$this->context = $context;
+		$this->group = $group;
+		$this->type = $type;
+		$this->index = $index;
+		$this->x = $x;
+		$this->y = $y;
+		$this->z = $z;
 		$this->code = $code;
 	}
 
 	// Returns string key for sorting
-	public function sortkey() {
-		return sprintf("%04d%s%02d%03d", $this->context, $this->object, $this->id, $this->index);
+	public function key() {
+		return sprintf("%04d%s%02d%03d", $this->context, $this->object, $this->type, $this->index);
 	}
 
 	// Returns string representation
 	public function __toString() {
-		return sprintf("%s\t\t%.3f\t%.3f\t%.3f\t%s", $this->sortkey(), $this->x, $this->y, $this->z, $this->code);
+		return sprintf("%s\t\t%.3f\t%.3f\t%.3f\t%s", $this->key(), $this->x, $this->y, $this->z, $this->code);
 	}
 
 } // class Node

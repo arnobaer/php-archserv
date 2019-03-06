@@ -2,7 +2,7 @@
 
 /*
  * Simple ArchServ parser for PHP
- * Copyright (C) 2016-2018  Bernhard Arnold
+ * Copyright (C) 2016-2019  Bernhard Arnold
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,22 +23,33 @@
 class Group implements \Iterator {
 
 	public $context;
-	public $object;
-	public $id;
+	public $group;
+	public $type;
 	public $nodes;
 
-	private $position;
+	private $position = 0;
 
-	public function __construct($context, $object, $id, $nodes=array()) {
+	public function __construct($context, $group, $type, $code) {
 		$this->context = $context;
-		$this->object = $object;
-		$this->id = $id;
-		$this->nodes = $nodes;
-		$this->position = 0;
+		$this->group = $group;
+		$this->type = $type;
+		$this->code = $code;
+		$this->nodes = array();
 	}
 
-	public function append($node) {
+	public function append(Node $node) {
 		$this->nodes[] = $node;
+	}
+
+	// Returns true if context, group and type of node matches with group.
+	public function match(Node $node) {
+		if ($node->context != $this->context)
+			return false;
+		if ($node->group != $this->group)
+			return false;
+		if ($node->type != $this->type)
+			return false;
+		return true;
 	}
 
 	public function rewind() {
@@ -63,11 +74,7 @@ class Group implements \Iterator {
 
 	// Returns string representation
 	public function __toString() {
-		$lines = array();
-		foreach ($this as $node) {
-			$lines[] = "$node";
-		}
-		return join(PHP_EOL, $lines);
+		return join(PHP_EOL, $this->nodes);
 	}
 
 } // class Group

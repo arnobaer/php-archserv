@@ -2,7 +2,7 @@
     "name": "arnobaer/php-archserv",
     "type": "library",
     "description": "Simple ArchServ parser for PHP",
-    "keywords": [],
+    "keywords": ["GIS", "Archaeology", "ArchServ", "Parser"],
     "homepage": "https://github.com/arnobaer/php-archserv/",
     "license": "GPL3",
     "authors": [

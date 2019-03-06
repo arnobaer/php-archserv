@@ -2,7 +2,7 @@
 
 /*
  * Simple ArchServ parser for PHP
- * Copyright (C) 2016-2018  Bernhard Arnold
+ * Copyright (C) 2016-2019  Bernhard Arnold
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,13 @@
  *
  */
 
-// ArchServ foramt parser
+// ArchServ format parser
 class Parser {
 
 	// Regex capture groups
 	// 2: context
-	// 3: object
-	// 4: id
+	// 3: group
+	// 4: type
 	// 5: index
 	// 6: x
 	// 7: y
@@ -33,12 +33,105 @@ class Parser {
 	// 10: code
 	const RegExPattern = '%(?m)^(:?(\d\d\d\d)([A-Z])(\d\d)(\d\d\d)\s+)?(\-?\d+\.\d+)\s+(\-?\d+\.\d+)\s+(\-?\d+\.\d+)(:?\s+([\-\w]+))?\s*$%';
 
+	// Mapping node to GeoJson geometry type
+	const GeoJsonTypes = array(
+		Node::Nail => 'MultiPoint',
+		Node::Height => 'MultiPoint',
+		Node::SinglePoint => 'MultiPoint',
+		Node::LineOpen => 'MultiLineString',
+		Node::LineClosed => 'MultiPolygon',
+		Node::SplineOpen => 'MultiLineString',
+		Node::SplineClosed => 'MultiPolygon',
+		Node::Arch => 'MultiPoint',
+		Node::SingleFind => 'MultiPoint',
+		Node::PhotogrammetryPoint => 'MultiPoint',
+		Node::FixedPoint => 'MultiPoint',
+		Node::BorderOpen => 'MultiLineString',
+		Node::BorderClosed => 'MultiPolygon'
+	);
+
 	// Parse Arch Serv compatible input,
 	// returns list of node groups.
-	public function parse($text) {
+	public function parse($text, $projection=null) {
+		// TODO optional coordinate projection passing a proj4php object
 		$nodes = $this->parse_nodes($text);
-		$this->sort_nodes($nodes);
 		return $this->group_nodes($nodes);
+	}
+
+	public function parse_tree($text, $projection=null) {
+		$groups = $this->parse($text, $projection);
+		$contexts = array();
+		foreach ($groups as $group) {
+			$context = $group->context;
+			$type = $group->type;
+			if (!array_key_exists($context, $contexts)) {
+				$contexts[$context] = array();
+			}
+			if (!array_key_exists($type, $contexts[$context])) {
+				$contexts[$context][$type] = array();
+			}
+			$contexts[$context][$type][] = $group;
+		}
+		return $contexts;
+	}
+
+	public function parse_geojson($text, $projection=null) {
+		$contexts = $this->parse_tree($text, $projection);
+		$features = array();
+		foreach ($contexts as $context => $types) {
+			foreach ($types as $type => $groups) {
+				$geometryType = self::GeoJsonTypes[$type];
+				$coordinates = array();
+				switch ($geometryType) {
+					case 'MultiPoint': {
+						foreach ($groups as $group) {
+							foreach ($group as $node) {
+								$coordinates[] = array($node->x, $node->y, $node->z);
+							}
+						}
+					} break;
+					case 'MultiLineString': {
+						foreach ($groups as $group) {
+							$block = array();
+							foreach ($group as $node) {
+								$block[] = array($node->x, $node->y, $node->z);
+							}
+							$coordinates[] = $block;
+						}
+					} break;
+					case 'MultiPolygon': {
+						foreach ($groups as $group) {
+							$block = array();
+							foreach ($group as $node) {
+								$block[] = array($node->x, $node->y, $node->z);
+							}
+							if (sizeof($block)) {
+								$block[] = $block[0];
+							}
+							$coordinates[] = array($block);
+						}
+					} break;
+					default: throw new \ErrorException("unsupported type: {$geometryType}");
+				} // switch
+				$geometry = array(
+					'type' => $geometryType,
+					'coordinates' => $coordinates
+				);
+				$features[] = array(
+					'type' => 'Feature',
+					'geometry' => $geometry,
+					'properties' => array(
+						'context' => $node->context,
+						'type' => $node->type,
+						'code' => $node->code
+					)
+				);
+			}
+		}
+		return array(
+			'type' => 'FeatureCollection',
+			'features' => $features
+		);
 	}
 
 	protected function parse_matches($text) {
@@ -51,54 +144,31 @@ class Parser {
 		foreach ($this->parse_matches($text) as &$match) {
 			// Append new node
 			$nodes[] = new Node(
-				$context = $match[2],
-				$object = $match[3],
-				$id = $match[4],
-				$index = $match[5],
-				$x = $match[6],
-				$y = $match[7],
-				$z = $match[8],
+				$context = (integer) $match[2],
+				$group = $match[3],
+				$type = (integer) $match[4],
+				$index = (integer) $match[5],
+				$x = (float) $match[6],
+				$y = (float) $match[7],
+				$z = (float) $match[8],
 				$code = $match[10]
 			);
 		}
 		return $nodes;
 	}
 
-	protected function sort_nodes($nodes) {
-		usort($nodes, function($a, $b) {
-			$a_key = $a->sortkey();
-			$b_key = $b->sortkey();
-			if ($a_key == $b_key) {
-				return 0;
-			}
-			return $a_key < $b_key ? -1 : 1;
-		});
-	}
-
 	protected function group_nodes($nodes) {
-		$group = null;
-		$results = array();
-		foreach ($nodes as &$node) {
-			if (null === $group) {
-				// create first group
-				$group = new Group($node->context, $node->object, $node->id);
-			} else {
-				// test for new group
-				if ($node->context != $group->context ||
-						$node->object != $group->object ||
-						$node->id != $group->id) {
-					// push current group to results, start a new group
-					$results[] = $group;
-					$group = new Group($node->context, $node->object, $node->id);
-				}
+		$groups = array();
+		foreach ($nodes as $node) {
+			$group = end($groups);
+			// Create first group or create new group for differnt node
+			if (false === $group || false === $group->match($node)) {
+				$groups[] = new Group($node->context, $node->group, $node->type, $node->code);
+				$group = end($groups);
 			}
 			$group->append($node);
 		}
-		if (null !== $group) {
-			$results[] = $group;
-			$group = null;
-		}
-		return $results;
+		return $groups;
 	}
 
 } // class Parser

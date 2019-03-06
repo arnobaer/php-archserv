@@ -14,7 +14,7 @@ $groups = parser->parse($text);
 // Iterate over groups and nodes
 foreach ($groups as $group) {
   foreach ($group as $node) {
-    echo sprintf("%s %s\n", $node->sortkey(), $node->code);
+    echo sprintf("%s %s\n", $node->key(), $node->code);
   }
 }
 
